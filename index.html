@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HintTech Compliance Flowcharts — WDBA · VBAR · SNA · WTTA</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Segoe UI', -apple-system, system-ui, sans-serif; }
+    button { font-family: inherit; }
+    ::-webkit-scrollbar { height: 8px; }
+    ::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 4px; }
+    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+  </style>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.9/babel.min.js"></script>
+</head>
+<body>
+  <div id="root"></div>
+  <script type="text/babel">
+const { useState, useRef, useCallback } = React;
+
+
+const ACTORS = ["Kandidaat", "Opdrachtgever", "Leverancier", "HintTech"];
+const ACTOR_SUBS = ["ZZP'er / Medewerker", "Inlenende partij", "Tussenpartij", "MSP / Coördinatie"];
+
+const LANE_W = 260;
+const TOTAL_W = LANE_W * 4;
+const NODE_W = 190;
+const NODE_H = 52;
+const DIAMOND_SIZE = 70;
+const ROW_H = 95;
+const HEADER_H = 56;
+const PHASE_H = 36;
+
+const C = {
+  primary: "#5B4FE8",
+  primaryLight: "#EEF0FF",
+  accent: "#E8A317",
+  green: "#16A34A",
+  greenLight: "#DCFCE7",
+  red: "#DC2626",
+  redLight: "#FEE2E2",
+  laneLine: "#E5E7EB",
+  text: "#1F2937",
+  nodeStroke: "#5B4FE8",
+  nodeFill: "#FAFBFF",
+};
+
+function laneCenter(i) { return i * LANE_W + LANE_W / 2; }
+
+// ──────────── ZZP FLOW ────────────
+const zzpFlow = {
+  phases: [
+    { label: "FASE 1 — AANVRAAG & WERVING", afterRow: -1 },
+    { label: "FASE 2 — PLAATSING", afterRow: 7 },
+    { label: "FASE 3 — CONTRACTEREN", afterRow: 9 },
+    { label: "FASE 4 — FINANCIEEL ONBOARDEN", afterRow: 12 },
+    { label: "FASE 5 — INZET", afterRow: 16 },
+    { label: "FASE 6 — VERLENGING", afterRow: 20 },
+    { label: "FASE 7 — BEËINDIGING", afterRow: 24 },
+  ],
+  nodes: [
+    // ── Fase 1 ──
+    { id:"z0", lane:1, row:0, label:"Aanvraag\nkomt binnen", type:"start",
+      detail:"De opdrachtgever dient een inhuurverzoek in bij HintTech. De Resource Manager neemt de aanvraag in behandeling en bepaalt of deze geschikt is voor ZZP-inzet of detachering." },
+
+    { id:"z0b", lane:1, row:1, label:"Info gelijke beloning\naanvragen", type:"process",
+      detail:"Informatie omtrent Gelijke Beloning bij opdrachtgever opvragen:\n\n• Totale pakket: loon, toeslagen, vakantiedagen, pensioen, opleidings- en/of leasebudget\n\nDeze gegevens zijn nodig voor de WTTA-toets in de volgende stap." },
+
+    { id:"z1", lane:3, row:2, label:"Is aanvraag\ngeschikt voor ZZP?", type:"decision",
+      detail:"7-Punten Check — Is de aanvraag geschikt voor ZZP?\n\n1. De aard en duur van de werkzaamheden\n2. De wijze waarop de werkzaamheden en de werktijden worden bepaald\n3. De inbedding van het werk en van degene die de werkzaamheden verricht in de organisatie en de bedrijfsvoering van degene voor wie de werkzaamheden worden verricht\n4. Het al dan niet bestaan van een verplichting het werk persoonlijk uit te voeren\n5. De wijze waarop de contractuele regeling van de verhouding van partijen tot stand is gekomen\n6. De wijze waarop de beloning (prijs, tarief) wordt bepaald en waarop deze wordt uitgekeerd\n7. De hoogte van deze beloningen" },
+
+    { id:"z1n", lane:2, row:2, label:"Niet geschikt\nals ZZP", type:"end_red",
+      detail:"De aanvraag is op basis van de 7-Punten Check niet geschikt voor ZZP-inzet. Overweeg detachering of een andere contractvorm.\n\nMogelijke redenen:\n• De aard en duur van de werkzaamheden wijzen op een arbeidsrelatie\n• De werkzaamheden en werktijden worden door de opdrachtgever bepaald\n• Het werk is te sterk ingebed in de organisatie van de opdrachtgever\n• Er is een verplichting het werk persoonlijk uit te voeren\n• De beloning wijst op een loondienstverhouding" },
+
+    { id:"z1w", lane:3, row:4, label:"WTTA Checklist\nbeloning ZZP", type:"decision",
+      detail:"CHECKLIST WTTA – Vastleggen gelijkwaardige beloning ZZP'er vs. vast personeel\n\n1. Functie-informatie\n• Functietitel van de ZZP'er\n• Functietitel van vergelijkbare interne medewerkers\n• Functiebeschrijving / takenpakket\n• Niveau van verantwoordelijkheid & zelfstandigheid\n• Vereiste opleiding / certificeringen\n• Vereiste ervaring / senioriteit\nDoel: vaststellen of de werkzaamheden gelijkwaardig zijn.\n\n2. Beloningsgegevens opdrachtgever (interne medewerkers)\n• Salarisschaal / trede van vergelijkbare functies\n• Bruto maandsalaris of uurloon\n• Toeslagen\n• Vakantiegeldpercentage\n• Eindejaarsuitkering / 13e maand\n• Bonusregelingen (indien structureel)\n• Pensioenpremie werkgever\n• Overige vaste looncomponenten\nDoel: bepalen wat 'gelijkwaardig' betekent in de context van de opdrachtgever.\n\n3. Beloningsgegevens ZZP'er\n• Uurtarief ZZP'er\n• Eventuele toeslagen of opslagen\n• Kostencomponenten (reiskosten, materialen, licenties)\n• Eventuele correcties voor ondernemersrisico en werkgeverslasten (WTTA staat een opslag toe, maar deze moet redelijk en onderbouwd zijn)\nDoel: beoordelen of het ZZP-tarief niet significant afwijkt van de beloning van vergelijkbare werknemers.\n\n4. Vergelijkingsanalyse (verplicht vast te leggen)\n• Onderbouwing waarom de ZZP'er gelijkwaardig werk verricht\n• Berekening van vergelijkbare beloning (interne medewerker → omgerekend naar uurloon)\n• Vergelijking interne beloning vs. ZZP-tarief\n• Conclusie: gelijkwaardig / niet gelijkwaardig\n• Eventuele correcties of motivatie bij afwijkingen\nDoel: aantoonbaar maken dat de WTTA-toets is uitgevoerd.\n\n5. Documentatie & bewijsstukken\n• Functiebeschrijvingen opdrachtgever\n• Salaristabellen / HR-informatie opdrachtgever\n• Tariefafspraken ZZP'er\n• Vastlegging van de WTTA-toets in het inzetdossier\n• Goedkeuring opdrachtgever op de vergelijking (aanbevolen, niet verplicht)\nDoel: dossier moet audit-proof zijn voor ILT (Inspectie SZW)" },
+
+    { id:"z1wn", lane:2, row:4, label:"Beloning niet\ngelijkwaardig", type:"end_red",
+      detail:"De beloning van de ZZP'er is niet gelijkwaardig aan vergelijkbare werknemers van de opdrachtgever. Het tarief moet worden aangepast of de inzet kan niet doorgaan conform WTTA-vereisten." },
+
+    { id:"z2", lane:3, row:5, label:"Controle arbeids-\nhistorie bij OG", type:"process",
+      detail:"Controleren arbeidshistorie bij opdrachtgever in verband met mogelijke kwalificatie doorlopend werkgeverschap:\n\n• Overzicht eerdere opdrachten / rollen / periode\n• Oude inzetcontracten opvragen en controleren" },
+
+    { id:"z3", lane:3, row:6, label:"Selectie & controle\nkandidaten", type:"process",
+      detail:"Controleren:\n\n• Identiteit kandidaat gecontroleerd en vastgelegd (datum, methode, verificatie)\n• Werkrechten kandidaat geldig op (beoogde) startdatum (EU/EER/CH of geldige verblijfs-/werkvergunning) vastgelegd\n• CV-versie, geschiktheidsmatrix en referenties\n• AVG-toestemming voor delen met opdrachtgever" },
+
+    { id:"z4", lane:1, row:7, label:"Kandidaat\naanbieden", type:"process",
+      detail:"De geselecteerde kandidaat wordt door HintTech aangeboden aan de opdrachtgever voor beoordeling en goedkeuring." },
+
+    // ── Fase 2 ──
+    { id:"z5", lane:1, row:8, label:"Gunnings-\nbeslissing", type:"process",
+      detail:"Controleren:\n\n• Gunningsbeslissing en ingangsdatum geüpload\n• Onboarding-eisen opdrachtgever (NDA, VOG/screening, ARBO/veiligheid) uitgezet en status gemonitord in ATS\n• Nadere Overeenkomst ontvangen en door opdrachtgever en opdrachtnemer ondertekend\n• Facturatieprofielen opgesteld (entiteiten, btw/vergelijkingsregels, PO/ordernummer)" },
+
+    { id:"z6", lane:3, row:9, label:"Onboarding-eisen\nuitzetten", type:"process",
+      detail:"• Onboarding-eisen opdrachtgever (NDA, VOG/screening, ARBO/veiligheid) uitgezet en status gemonitord in ATS\n• Nadere Overeenkomst ontvangen en door opdrachtgever en opdrachtnemer ondertekend\n• Facturatieprofielen opgesteld (entiteiten, btw/vergelijkingsregels, PO/ordernummer)" },
+
+    // ── Fase 3 ──
+    { id:"z9", lane:3, row:10, label:"Is ZZP'er een\nechte ondernemer?", type:"decision",
+      detail:"Finale 9-punts Ondernemerscheck (Deliveroo/Bovib-afwegingskader)\n\n1. De aard en duur van de werkzaamheden\n2. De wijze waarop de werkzaamheden en de werktijden worden bepaald\n3. De inbedding van het werk en van degene die de werkzaamheden verricht in de organisatie en de bedrijfsvoering van degene voor wie de werkzaamheden worden verricht\n4. Het al dan niet bestaan van een verplichting het werk persoonlijk uit te voeren\n5. De wijze waarop de contractuele regeling van de verhouding van partijen tot stand is gekomen\n6. De wijze waarop de beloning (prijs, tarief) wordt bepaald en waarop deze wordt uitgekeerd\n7. De hoogte van deze beloningen\n8. Of de kandidaat commercieel risico loopt\n9. Of de kandidaat zich als een ondernemer gedraagt:\n   • Bij het verwerven van een reputatie\n   • Bij acquisitie\n   • Wat betreft fiscale behandeling\n   • Het aantal opdrachtgevers voor wie hij werkt of heeft gewerkt\n   • De duur waarvoor hij zich doorgaans aan een bepaalde opdrachtgever verbindt" },
+
+    { id:"z9n", lane:2, row:10, label:"Niet geschikt\nals ZZP", type:"end_red",
+      detail:"De kandidaat voldoet niet aan de ondernemerscheck en kan niet als ZZP'er worden ingezet. Overweeg detachering of een andere contractvorm." },
+
+    { id:"z10", lane:3, row:11, label:"Dossier\nvastleggen", type:"process",
+      detail:"VASTLEGGEN IN DOSSIER\n\n1. Opdracht & context van de inzet\n• Compliant opdrachtomschrijving met: concrete werkzaamheden, beoogde resultaten/deliverables, planning, deadlines, afhankelijkheden, randvoorwaarden (locatie, middelen, toegang), mate van zelfstandigheid en resultaatverantwoordelijkheid\n\n2. Toetsing van de arbeidsrelatie (DBA / VBAR)\n• Ondernemerstoets (initieel + elk kwartaal + bij verlenging)\n• Uitgebreide ondernemerstoets met controle elk kwartaal en bij verlenging\n• Toetsing aan Deliveroo-arrest / Bovib-afwegingskader\n\n3. Contractuele documenten\n• Bovib-goedgekeurde modelovereenkomst\n• Nadere Inhuurovereenkomst (NOK)\n• Eventuele WNT-toets\n\n4. Screening & administratieve verplichtingen\n• VOG (vereist vóór start)\n• NDA / privacyverklaring\n• Identiteitscontrole (vereist onder Wwft/SNA/NEN4400-1)\n• KvK-uittreksel + btw-nummer (geldig op startdatum en ≤ 3 maanden oud op startmoment)\n\n5. Toets Gelijkwaardige Beloning WTTA\n• De WTTA verplicht om gelijkwaardige beloning van ZZP'ers t.o.v. vergelijkbare werknemers van de opdrachtgever te controleren én aantoonbaar vast te leggen. Zie hiervoor checklist." },
+
+    { id:"z11", lane:0, row:12, label:"Contract\nondertekenen", type:"process",
+      detail:"De ZZP'er tekent de overeenkomst (Bovib-modelovereenkomst en Nadere Inhuurovereenkomst) en levert alle benodigde documenten aan (VOG, KvK-uittreksel, identiteitsbewijs)." },
+
+    // ── Fase 4 ──
+    { id:"z12", lane:3, row:13, label:"Facturatie &\nIBAN inrichten", type:"process",
+      detail:"1. Facturatie- en betaalinrichting\n• Facturatieprofiel aangemaakt in systeem (HintTech ↔ ZZP'er): juiste juridische entiteiten, btw-regime (btw wel/niet van toepassing), afgesproken tarief, eenheid (uur/dag), factuurfrequentie\n• IBAN-verificatie ZZP'er vastgelegd (fraudepreventie, SNA-eis)\n• PO-/ordernummer opdrachtgever gekoppeld aan dossier (indien van toepassing)" },
+
+    { id:"z13", lane:3, row:14, label:"Urenregistratie\n& goedkeuring", type:"process",
+      detail:"2. Uren- en goedkeuringsproces\n• Urenregistratieproces ingericht: ZZP'er → urenregistratie → digitale goedkeuring opdrachtgever\n• Vastlegging van naam goedkeurder + datum/tijd (audit-trail)\n• Koppeling ingericht: uren-ID ↔ inkoopfactuur ZZP'er ↔ verkoopfactuur HintTech" },
+
+    { id:"z14", lane:3, row:15, label:"Factuurcontrole", type:"process",
+      detail:"3. Controle inkomende ZZP-facturen\n• Factuur voldoet aan wettelijke vereisten: NAW, KvK, btw-nummer, factuurnummer, factuurdatum\n• Factuur sluit 1-op-1 aan op goedgekeurde uren\n• Tarief en periode conform overeenkomst\n• Afwijkingen geregistreerd incl. correctie-actie (4-O-herstelprincipe)" },
+
+    { id:"z15a", lane:3, row:16, label:"Archivering &\naudit-trail", type:"process",
+      detail:"4. Archivering & audit-trail\n• Volledig inzetdossier conform AVG ingesteld" },
+
+    // ── Fase 5 ──
+    { id:"z15", lane:0, row:17, label:"Uitvoering\nconform opdracht", type:"process",
+      detail:"1. Uitvoering conform opdracht (WDBA / VBAR)\n• Werkzaamheden komen overeen met de vastgelegde opdrachtomschrijving (inhoud, scope, deliverables; geen structurele taakuitbreiding)\n• Geen aanwijzingen van gezag of hiërarchische aansturing door opdrachtgever (ZZP'er bepaalt zelf hoe het werk wordt uitgevoerd)\n• Geen verplichte aanwezigheid in vaste werktijden of roosters van de opdrachtgever\n• Resultaatverantwoordelijkheid blijft bij de ZZP'er (geen inspanningsverplichting)" },
+
+    { id:"z16", lane:3, row:18, label:"Monitoring\nondernemerschap", type:"process",
+      detail:"2. Ondernemerschap in de praktijk (VBAR / Deliveroo-lijn)\n• ZZP'er treedt aantoonbaar op voor eigen rekening en risico (geen doorbetaling bij ziekte, eigen verzekeringen)\n• Geen functionele inbedding als 'teamlid' van de opdrachtgever (geen beoordelingsgesprekken, functioneringscyclus, HR-rollen)\n• Eventuele afwijkingen van de opdracht vastgelegd en beoordeeld (signaal VBAR-risico)" },
+
+    { id:"z17", lane:3, row:19, label:"WTTA\nbewaking", type:"process",
+      detail:"3. WTTA – Gelijkwaardige beloning tijdens inzet\n• Tarief blijft binnen de vastgelegde WTTA-onderbouwing (geen structurele verlaging/verhoging zonder herbeoordeling)\n• Indien werkzaamheden wijzigen: hernieuwde WTTA-toets uitgevoerd en vastgelegd" },
+
+    { id:"z18", lane:3, row:20, label:"Kwartaalcheck\n(SNA/NEN4400)", type:"process",
+      detail:"4. Monitoring & dossiervorming (SNA / NEN 4400-1)\n• Periodieke check (ten minste per kwartaal) op uitvoering conform overeenkomst uitgevoerd\n• Afwijkingen vastgelegd volgens 4-O-herstelregistratie (Oorzaak, Omvang, Oplossing, Onderbouwing)" },
+
+    // ── Fase 6 ──
+    { id:"z19", lane:3, row:21, label:"Herbeoordeling\narbeidsrelatie", type:"process",
+      detail:"1. Herbeoordeling arbeidsrelatie (WDBA / VBAR)\n• Controleren arbeidshistorie bij opdrachtgever i.v.m. mogelijke kwalificatie doorlopend werkgeverschap:\n  → Overzicht eerdere opdrachten / rollen / periode\n  → Oude inzetcontracten opvragen en analyseren\n• Opdracht nog steeds tijdelijk en afgebakend van aard (geen structurele of blijvende functie ontstaan)\n• Feitelijke uitvoering komt nog overeen met ZZP-inzet (geen gezagsverhouding, geen hiërarchische aansturing)\n• Mate van organisatorische inbedding opnieuw beoordeeld (geen vaste plaats in teamstructuur, overleg, besluitvorming)\n• Persoonlijke arbeid niet feitelijk afgedwongen (vervanging theoretisch en praktisch mogelijk)" },
+
+    { id:"z20", lane:3, row:22, label:"Risico doorlopend\nwerkverband?", type:"decision",
+      detail:"2. Duur & opvolging (verhoogd VBAR-risico bij verlenging)\n• Totale inzetduur bij opdrachtgever opnieuw beoordeeld (incl. eerdere opdrachten / eerdere rollen)\n• Beoordeeld of verlenging leidt tot 'doorlopend werkverband'-risico\n• Uitkomst expliciet vastgelegd in dossier (go / no-go verlenging als ZZP)" },
+
+    { id:"z20n", lane:2, row:22, label:"Stop ZZP-inzet\nof omzetten", type:"end_red",
+      detail:"Er is een te hoog risico op kwalificatie als doorlopend werkverband. De ZZP-inzet moet worden gestopt of worden omgezet naar een detacheringsconstructie." },
+
+    { id:"z21", lane:3, row:23, label:"WTTA\nhertoetsing", type:"process",
+      detail:"4. WTTA – Gelijkwaardige beloning\n• Tarief herbeoordeeld t.o.v. gelijkwaardige functies bij opdrachtgever\n• Vastgesteld dat tarief nog steeds gelijkwaardig en verdedigbaar is\n• Bij functiewijziging of tariefwijziging: nieuwe WTTA-analyse vastgelegd\n\n3. Opdracht & scope\n• Verlenging betreft desgewenst dezelfde opdracht en deliverables óf\n• Bij wijziging van werkzaamheden: nieuwe/gewijzigde opdrachtomschrijving vastgelegd, herbeoordeling DBA/VBAR uitgevoerd" },
+
+    { id:"z22", lane:0, row:24, label:"Verlengings-\novereenkomst", type:"process",
+      detail:"5. Contractuele en administratieve borging\n• Addendum / verlengingsovereenkomst opgesteld en ondertekend\n• Nieuwe start- en einddatum expliciet vastgelegd\n• Verlenging pas bevestigd na afronding bovenstaande checks" },
+
+    // ── Fase 7 ──
+    { id:"z23", lane:3, row:25, label:"Afronding &\nevaluatie ZZP", type:"process",
+      detail:"1. Feitelijke afronding arbeidsrelatie (WDBA / VBAR)\n• Beëindiging is conform overeengekomen einddatum of overeengekomen opzegbepaling\n• Geen aanwijzingen van stilzwijgende voortzetting (doorwerken na einddatum)\n• Laatste werkzaamheden sluiten aan op overeengekomen opdracht; geen structurele overdracht als vaste medewerker\n\n2. Evaluatie ZZP-karakter (ex-post toets)\n• Terugblik: inzet is gedurende de gehele looptijd uitgevoerd conform ZZP-kenmerken (geen gezag, geen organisatorische inbedding)\n• Eventuele afwijkingen tijdens inzet zijn gedocumenteerd en opgeschoond\n• Geen signalen dat inzet bij beëindiging als dienstbetrekking kan worden gekwalificeerd" },
+
+    { id:"z24", lane:3, row:26, label:"WTTA slotcontrole\n& financieel", type:"process",
+      detail:"3. WTTA – Slotcontrole gelijkwaardige beloning\n• Laatst gefactureerde tarief valt binnen vastgelegde WTTA-toets\n• Geen structurele afwijking in beloning ontstaan richting einde inzet\n• Indien gedurende inzet wijziging plaatsvond: onderbouwing aanwezig in dossier\n\n4. Financiële afronding & facturatie\n• Laatste urenstaat goedgekeurd door opdrachtgever\n• Laatste factuur sluit volledig aan op goedgekeurde uren\n• Geen openstaande correcties of disputen" },
+
+    { id:"z25", lane:3, row:27, label:"Dossier\nafsluiten", type:"end_green",
+      detail:"5. Dossiervorming & archivering (SNA / NEN 4400-1)\n• Inzetdossier compleet afgesloten: overeenkomst(en), goedgekeurde urenfacturen, vastgelegde checks en afwijkingen\n• Dossier gemarkeerd als 'afgesloten' met juiste bewaartermijnen\n• Geen actiepunten of open herstelmaatregelen" },
+  ],
+  edges: [
+    {from:"z0",to:"z0b"},
+    {from:"z0b",to:"z1"},
+    {from:"z1",to:"z1n",label:"Nee"},
+    {from:"z1",to:"z1w",label:"Ja"},
+    {from:"z1w",to:"z1wn",label:"Nee"},
+    {from:"z1w",to:"z2",label:"Ja"},
+    {from:"z2",to:"z3"},
+    {from:"z3",to:"z4"},
+    {from:"z4",to:"z5"},
+    {from:"z5",to:"z6"},
+    {from:"z6",to:"z9"},
+    {from:"z9",to:"z9n",label:"Nee"},
+    {from:"z9",to:"z10",label:"Ja"},
+    {from:"z10",to:"z11"},
+    {from:"z11",to:"z12"},
+    {from:"z12",to:"z13"},
+    {from:"z13",to:"z14"},
+    {from:"z14",to:"z15a"},
+    {from:"z15a",to:"z15"},
+    {from:"z15",to:"z16"},
+    {from:"z16",to:"z17"},
+    {from:"z17",to:"z18"},
+    {from:"z18",to:"z19"},
+    {from:"z19",to:"z20"},
+    {from:"z20",to:"z20n",label:"Ja"},
+    {from:"z20",to:"z21",label:"Nee"},
+    {from:"z21",to:"z22"},
+    {from:"z22",to:"z23"},
+    {from:"z23",to:"z24"},
+    {from:"z24",to:"z25"},
+  ],
+};
+
+// ──────────── DETACHERING FLOW ────────────
+const detacheringFlow = {
+  phases: [
+    { label: "FASE 1 — AANVRAAG & WERVING", afterRow: -1 },
+    { label: "FASE 2 — PLAATSING", afterRow: 5 },
+    { label: "FASE 3 — CONTRACTEREN", afterRow: 8 },
+    { label: "FASE 4 — FINANCIEEL ONBOARDEN", afterRow: 11 },
+    { label: "FASE 5 — INZET", afterRow: 16 },
+    { label: "FASE 6 — VERLENGING", afterRow: 21 },
+    { label: "FASE 7 — BEËINDIGING", afterRow: 26 },
+  ],
+  nodes: [
+    // ── Fase 1 ──
+    { id:"d0", lane:1, row:0, label:"Aanvraag\nkomt binnen", type:"start",
+      detail:"De opdrachtgever dient een inhuurverzoek in bij HintTech. De Resource Manager neemt de aanvraag in behandeling en bepaalt dat deze via detachering wordt ingevuld." },
+
+    { id:"d0b", lane:1, row:1, label:"Info gelijke beloning\naanvragen", type:"process",
+      detail:"Informatie omtrent Gelijke Beloning bij opdrachtgever opvragen:\n\n• Totale pakket: loon, toeslagen, vakantiedagen, pensioen, opleidings- en/of leasebudget\n\nDeze gegevens zijn nodig voor de WTTA-toets (inlenersbeloning / pay-ok-check)." },
+
+    { id:"d0w", lane:3, row:2, label:"WTTA Checklist\ndetachering", type:"decision",
+      detail:"Checklist WTTA – Gelijkwaardige beloning voor personeel in loondienst\n\nDe WTTA verplicht om aan te tonen dat gedetacheerde medewerkers niet worden onderbetaald t.o.v. vergelijkbare werknemers van de opdrachtgever.\n\n1. Functie-informatie (vergelijkbaarheid vaststellen)\n• Functietitel van de gedetacheerde medewerker\n• Functietitel van vergelijkbare interne medewerkers\n• Takenpakket / verantwoordelijkheden\n• Senioriteit / ervaringsniveau\n• Opleiding / certificeringen\n• Mate van zelfstandigheid en aansturing\nDoel: objectief bepalen of het werk gelijkwaardig is aan dat van interne medewerkers.\n\n2. Beloningsgegevens opdrachtgever (interne medewerkers)\n• Salarisschaal / trede van de vergelijkbare functie\n• Bruto maandsalaris of uurloon\n• Vakantiegeldpercentage\n• Eindejaarsuitkering / 13e maand\n• Structurele bonusregelingen\n• Toeslagen\n• Pensioenpremie werkgever\n• Overige vaste looncomponenten (bijv. inconveniënten, vaste vergoedingen)\nDoel: bepalen wat 'gelijkwaardige beloning' betekent binnen de organisatie van de opdrachtgever.\n\n3. Beloningsgegevens gedetacheerde medewerker\n• Bruto loon / uurloon\n• Salarisschaal / trede (indien CAO van toepassing)\n• Vakantiegeld\n• Eindejaarsuitkering / vaste bonus\n• Toeslagen (indien van toepassing)\n• Pensioenregeling (premie werkgever + werknemer)\n• Reiskosten / onkostenvergoedingen\n• Overige vaste looncomponenten\nDoel: toetsen of de medewerker minimaal gelijkwaardig wordt beloond.\n\n4. Vergelijkingsanalyse (verplicht vast te leggen)\n• Omgerekend uurloon interne medewerker vs. gedetacheerde medewerker\n• Vergelijking van alle relevante looncomponenten\n• Conclusie: gelijkwaardig / niet gelijkwaardig\n• Eventuele afwijkingen + onderbouwing waarom deze toegestaan zijn\n• Vastlegging dat de opdrachtgever de vergelijking heeft aangeleverd of bevestigd (aanbevolen)\nDoel: aantoonbaar maken dat de WTTA-toets zorgvuldig is uitgevoerd." },
+
+    { id:"d0wn", lane:2, row:2, label:"Beloning niet\ngelijkwaardig", type:"end_red",
+      detail:"De beloning van de gedetacheerde medewerker is niet gelijkwaardig aan vergelijkbare werknemers van de opdrachtgever. De beloning moet worden aangepast of de inzet kan niet doorgaan conform WTTA-vereisten." },
+
+    { id:"d1", lane:3, row:3, label:"Werving kandidaten\n(SNA-controle keten)", type:"process",
+      detail:"Werving via nieuwe leveranciers:\n\n• Controle SNA-register op certificering (SNA-certificaat in de gehele keten verplicht)\n• Vastlegging bij 'Financiële onboarding kandidaat'" },
+
+    { id:"d2", lane:3, row:4, label:"Selectie & controle\nkandidaten", type:"process",
+      detail:"Controleren:\n\n• Identiteit kandidaat gecontroleerd en vastgelegd (datum, methode, verificatie)\n• Werkrechten kandidaat geldig op (beoogde) startdatum (EU/EER/CH of geldige verblijfs-/werkvergunning) vastgelegd\n• CV-versie, geschiktheidsmatrix en referenties\n• AVG-toestemming voor delen met opdrachtgever" },
+
+    { id:"d3", lane:1, row:5, label:"Kandidaat\naanbieden", type:"process",
+      detail:"De geselecteerde kandidaat wordt door HintTech aangeboden aan de opdrachtgever voor beoordeling en goedkeuring." },
+
+    // ── Fase 2 ──
+    { id:"d4", lane:1, row:6, label:"Gunnings-\nbeslissing", type:"process",
+      detail:"Controleren:\n\n• Gunningsbeslissing en ingangsdatum geüpload\n• Onboarding-eisen opdrachtgever (NDA, VOG/screening, ARBO/veiligheid) uitgezet en status gemonitord in ATS\n• Nadere Overeenkomst ontvangen en door opdrachtgever en opdrachtnemer ondertekend\n• Facturatieprofielen opgesteld (entiteiten, btw/vergelijkingsregels, PO/ordernummer)" },
+
+    { id:"d5", lane:3, row:7, label:"Onboarding-eisen\nuitzetten", type:"process",
+      detail:"• Onboarding-eisen opdrachtgever (NDA, VOG/screening, ARBO/veiligheid) uitgezet en status gemonitord in ATS\n• Nadere Overeenkomst ontvangen en door opdrachtgever en opdrachtnemer ondertekend\n• Facturatieprofielen opgesteld (entiteiten, btw/vergelijkingsregels, PO/ordernummer)" },
+
+    { id:"d7b", lane:2, row:8, label:"SNA-status\nleverancier checken", type:"process",
+      detail:"• SNA-registratie leverancier gecontroleerd en vastgelegd (met datum/bron)\n• SNA-certificaat is verplicht in de gehele keten\n• Vastlegging bij financiële onboarding" },
+
+    // ── Fase 3 ──
+    { id:"d9", lane:3, row:9, label:"Dossier vastleggen\n(compliance)", type:"process",
+      detail:"VASTLEGGEN IN DOSSIER\n\n1. Contractuele & administratieve borging\n• Detacheringscontract / inleenovereenkomst\n• Opdrachtomschrijving (scope, deliverables, looptijd)\n• Tariefafspraken (transparant, inclusief fee-structuur)\n• PO-nummer / budgetbevestiging\n• Start- en einddatum\n• Vastlegging (scope, tarief, rol)\nDoel: een volledig en controleerbaar inzetdossier.\n\n2. Compliance & wettelijke verplichtingen\n• Identiteitscontrole (Wwft / SNA / NEN4400-1)\n• Gelijke-beloning-check (pay-ok-check)\n• WNT-toets (indien opdrachtgever onder WNT valt)\n• VOG / screenings (indien vereist)\n• Privacyverklaring / geheimhouding\n• Controle op arbeidstijden en rusttijden (ATW)\n• Toets op juiste contractvorm (geen schijnconstructies)\nDoel: voldoen aan alle relevante wetgeving en risico's minimaliseren.\n\n3. Bewijsstukken (audit-proof dossier)\n• Functiebeschrijvingen opdrachtgever\n• Salaristabellen opdrachtgever\n• Arbeidsovereenkomst gedetacheerde medewerker\n• Loonstrook (ter verificatie)\n• Pensioenregeling / werkgeverspremie\n• Vastgelegde WTTA-vergelijking\n• Eventuele bevestiging opdrachtgever\nDoel: dossier moet standhouden bij inspectie door ILT." },
+
+    { id:"d10", lane:2, row:10, label:"Contractuele borging\nleverancier", type:"process",
+      detail:"• Tariefafspraken en fee-structuur vastgelegd\n• PO-nummer / budgetbevestiging\n• Start- en einddatum expliciet vastgelegd\n• Inkoopovereenkomst HintTech–leverancier financieel vertaald" },
+
+    { id:"d11", lane:0, row:11, label:"Arbeidsovereenkomst\ntekenen", type:"process",
+      detail:"De gedetacheerde medewerker tekent de arbeidsovereenkomst en levert alle benodigde documenten aan (VOG, identiteitsbewijs, etc.)." },
+
+    // ── Fase 4 ──
+    { id:"d12", lane:3, row:12, label:"Inkoop/facturatie\nleverancier inrichten", type:"process",
+      detail:"1. Inkoop- en facturatie-inrichting leverancier\n• Inkoopovereenkomst HintTech–leverancier financieel vertaald naar tariefafspraken, factuurfrequentie, G-rekeningafspraken (indien van toepassing)\n• Facturatieprofiel leverancier ingericht (juiste entiteiten, btw-regime)\n• PO-/ordernummer opdrachtgever gekoppeld" },
+
+    { id:"d13", lane:3, row:13, label:"SNA/Waadi\nfinanciële borging", type:"process",
+      detail:"2. SNA / Waadi financiële borging\n• SNA-status leverancier vastgelegd (met datum/bron)\n• G-rekeningafspraken ingericht (indien van toepassing)" },
+
+    { id:"d14", lane:3, row:14, label:"Urenregistratie\n& goedkeuring", type:"process",
+      detail:"3. Uren- en goedkeuringsproces\n• Urenregistratie ingericht: medewerker → registratie → digitale goedkeuring opdrachtgever\n• Audit-trail: goedkeurder + datum/tijd vastgelegd\n• Koppeling: uren-ID ↔ inkoopfactuur leverancier ↔ verkoopfactuur HintTech" },
+
+    { id:"d15", lane:3, row:15, label:"Factuurcontrole\nleverancier", type:"process",
+      detail:"4. Factuurcontrole leverancier\n• Factuur formeel correct (NAW, KvK, btw, factuurnummer)\n• Sluit aan op goedgekeurde uren\n• Tarief en periode conform contract\n• Correcte toepassing G-rekening (indien afgesproken)\n• Afwijkingen geregistreerd en gecorrigeerd (audit-trail)" },
+
+    { id:"d16", lane:3, row:16, label:"Archivering\naudit-proof", type:"process",
+      detail:"5. Archivering & audit-trail\n• Financieel compleet dossier audit-proof voor Inspectie SZW en SNA-inspectie" },
+
+    // ── Fase 5 ──
+    { id:"d17", lane:0, row:17, label:"Feitelijke inzet\nconform overeenkomst", type:"process",
+      detail:"1. Feitelijke inzet & rolafspraken\n• Inzet komt overeen met functie, rol en scope uit inleen-/detacheringsovereenkomst\n• Geen structurele taakuitbreiding buiten overeengekomen functie\n• Start- en einddatum inzet actueel bewaakt (geen stilzwijgende verlengingen)" },
+
+    { id:"d18", lane:3, row:18, label:"WTTA bewaking\n(pay-ok)", type:"process",
+      detail:"2. WTTA – Gelijkwaardige beloning (pay-ok)\n• Doorlopende bewaking van inlenersbeloning (functie, senioriteit en verantwoordelijkheden ongewijzigd?)\n• Bij functiewijziging: nieuwe pay-ok-vergelijking uitgevoerd en vastgelegd\n• Geen signalen van onderbetaling t.o.v. vergelijkbare medewerkers opdrachtgever" },
+
+    { id:"d19", lane:3, row:19, label:"SNA/keten-\nverantwoordelijkheid", type:"process",
+      detail:"3. SNA / ketenverantwoordelijkheid\n• SNA-status leverancier periodiek gecontroleerd (bijv. elk kwartaal)\n• Bij signalen van non-compliance leverancier: aanvullende beheersmaatregelen vastgelegd (betalingsstructuur, controles)\n• Betalingen conform overeengekomen G-rekeningafspraken (indien van toepassing)" },
+
+    { id:"d20", lane:3, row:20, label:"Uren & arbeids-\ntijden bewaken", type:"process",
+      detail:"4. Uren & arbeidstijden\n• Urenregistratie sluit aan op feitelijke inzet en goedkeuring opdrachtgever\n• Geen signalen van structurele overschrijding arbeidstijden (ATW-risico)" },
+
+    { id:"d21", lane:3, row:21, label:"Audit-proof\ndossier bijhouden", type:"process",
+      detail:"5. Vastlegging & audit-proof dossier\n• Inzetdossier bevat aantoonbaar: goedgekeurde urenfacturen, pay-ok-vastlegging, SNA-status leverancier\n• Afwijkingen en corrigerende maatregelen vastgelegd en opgevolgd" },
+
+    // ── Fase 6 ──
+    { id:"d22", lane:3, row:22, label:"Functie & inzet\nherbeoordelen", type:"process",
+      detail:"1. Functie & inzetinhoud\n• Inzetfunctie bij verlenging ongewijzigd t.o.v. oorspronkelijke opdracht óf\n• Bij functiewijziging: aangepaste rol/functiebeschrijving vastgelegd, herbeoordeling inlenersbeloning uitgevoerd\n• Geen verschuiving naar structurele kernfunctie zonder expliciete vastlegging" },
+
+    { id:"d23", lane:3, row:23, label:"WTTA hertoetsing\n(pay-ok)", type:"process",
+      detail:"2. WTTA – Inlenersbeloning (verplicht bij verlenging)\n• Pay-ok-check opnieuw uitgevoerd bij verlenging\n• Bevestigd dat beloning nog steeds minimaal gelijkwaardig is\n• Wijzigingen in beloningsgebouw opdrachtgever meegenomen\n• Uitkomst pay-ok-check vastgelegd in inzetdossier" },
+
+    { id:"d24", lane:2, row:24, label:"SNA-status\nleverancier hercontrole", type:"process",
+      detail:"3. Leverancier & SNA-status\n• SNA-registratie leverancier opnieuw gecontroleerd\n• Geen signalen van verhoogd risico (betalingen, naheffingen, sancties)\n• Indien SNA-status gewijzigd: aanvullende beheersmaatregelen vastgelegd" },
+
+    { id:"d25", lane:3, row:25, label:"Vervangt inzet een\nvast dienstverband?", type:"decision",
+      detail:"4. Duur & opvolgende inzet\n• Totale duur van detachering beoordeeld in relatie tot opdracht\n• Geen signalen dat inzet feitelijk vast dienstverband vervangt\n• Eventuele opvolgende verlengingen gemonitord en geregistreerd" },
+
+    { id:"d25n", lane:2, row:26, label:"Inzet heroverwegen\nof omzetten", type:"end_red",
+      detail:"Er zijn signalen dat de inzet feitelijk een vast dienstverband vervangt. De inzet moet worden heroverwogen of omgezet." },
+
+    { id:"d26", lane:0, row:26, label:"Verlengings-\naddendum tekenen", type:"process",
+      detail:"5. Contractuele vastlegging\n• Verlengingsaddendum met nieuwe looptijd opgesteld\n• Tarief, rol en scope expliciet bevestigd\n• Verlenging pas geaccordeerd na afronding checks 1 t/m 4" },
+
+    // ── Fase 7 ──
+    { id:"d27", lane:3, row:27, label:"Beëindiging\ninhuur", type:"process",
+      detail:"1. Beëindiging van de inhuur\n• Beëindiging conform overeengekomen einddatum of beëindigingsafspraak\n• Geen doorinzet na einddatum zonder nieuwe overeenkomst\n• Werkzaamheden daadwerkelijk beëindigd bij opdrachtgever" },
+
+    { id:"d28", lane:3, row:28, label:"WTTA einde-\ninzetcontrole", type:"process",
+      detail:"2. WTTA – Einde-inzetcontrole inlenersbeloning\n• Vastgesteld dat medewerker tot einde inzet gelijkwaardig is beloond\n• Geen openstaande signalen van onderbetaling\n• Bij functiewijziging in laatste fase: pay-ok-vastlegging aanwezig" },
+
+    { id:"d29", lane:2, row:29, label:"SNA-afsluiting\nleverancier", type:"process",
+      detail:"3. Leverancier & ketenverantwoordelijkheid (SNA)\n• Leverancier was gedurende de volledige inzet compliant\n• Geen signalen van naheffingen, claims of inspecties die inzet raken\n• Indien G-rekening van toepassing: betalingen correct uitgevoerd" },
+
+    { id:"d30", lane:3, row:30, label:"Financiële\nafsluiting", type:"process",
+      detail:"4. Uren & financiële afsluiting\n• Laatste urenregistratie goedgekeurd door opdrachtgever\n• Laatste inkoop- en verkoopfacturen verwerkt\n• Geen openstaande correcties of disputen met leverancier of opdrachtgever" },
+
+    { id:"d31", lane:3, row:31, label:"Dossier\nafsluiten", type:"end_green",
+      detail:"5. Dossiervorming & archivering\n• Inzetdossier volledig en afsluitbaar: inleenafspraken, pay-ok-vastlegging, urenfacturen, SNA-checks\n• Dossier afgesloten conform audit- en bewaartermijnen\n• Eventuele leerpunten vastgelegd (bijv. voor verlengingen of toekomstige inzetten)" },
+  ],
+  edges: [
+    {from:"d0",to:"d0b"},
+    {from:"d0b",to:"d0w"},
+    {from:"d0w",to:"d0wn",label:"Nee"},
+    {from:"d0w",to:"d1",label:"Ja"},
+    {from:"d1",to:"d2"},
+    {from:"d2",to:"d3"},
+    {from:"d3",to:"d4"},
+    {from:"d4",to:"d5"},
+    {from:"d5",to:"d7b"},
+    {from:"d7b",to:"d9"},
+    {from:"d9",to:"d10"},
+    {from:"d10",to:"d11"},
+    {from:"d11",to:"d12"},
+    {from:"d12",to:"d13"},
+    {from:"d13",to:"d14"},
+    {from:"d14",to:"d15"},
+    {from:"d15",to:"d16"},
+    {from:"d16",to:"d17"},
+    {from:"d17",to:"d18"},
+    {from:"d18",to:"d19"},
+    {from:"d19",to:"d20"},
+    {from:"d20",to:"d21"},
+    {from:"d21",to:"d22"},
+    {from:"d22",to:"d23"},
+    {from:"d23",to:"d24"},
+    {from:"d24",to:"d25"},
+    {from:"d25",to:"d25n",label:"Ja"},
+    {from:"d25",to:"d26",label:"Nee"},
+    {from:"d26",to:"d27"},
+    {from:"d27",to:"d28"},
+    {from:"d28",to:"d29"},
+    {from:"d29",to:"d30"},
+    {from:"d30",to:"d31"},
+  ],
+};
+
+// ──────────── RENDERING ────────────
+
+function getNodePos(node, phases) {
+  const phasesBefore = phases.filter(p => p.afterRow < node.row).length;
+  return {
+    cx: laneCenter(node.lane),
+    cy: HEADER_H + phasesBefore * PHASE_H + node.row * ROW_H + ROW_H / 2 + 10,
+  };
+}
+
+function buildPath(fn, tn, phases, label) {
+  const from = getNodePos(fn, phases), to = getNodePos(tn, phases);
+  const fH = fn.type==="decision"?DIAMOND_SIZE/2:NODE_H/2;
+  const tH = tn.type==="decision"?DIAMOND_SIZE/2:NODE_H/2;
+  const fB=from.cy+fH, tT=to.cy-tH;
+  const fR=from.cx+(fn.type==="decision"?DIAMOND_SIZE/2:NODE_W/2);
+  const fL=from.cx-(fn.type==="decision"?DIAMOND_SIZE/2:NODE_W/2);
+  const same=fn.lane===tn.lane, dec=fn.type==="decision"&&label, left=tn.lane<fn.lane;
+  let path,lp;
+  if(same){path=`M ${from.cx} ${fB} L ${from.cx} ${tT}`;lp={x:from.cx+10,y:(fB+tT)/2};}
+  else if(dec&&left){path=`M ${fL} ${from.cy} L ${to.cx} ${from.cy} L ${to.cx} ${tT}`;lp={x:fL-18,y:from.cy-6};}
+  else if(dec){path=`M ${fR} ${from.cy} L ${to.cx} ${from.cy} L ${to.cx} ${tT}`;lp={x:fR+8,y:from.cy-6};}
+  else{const mY=fB+(tT-fB)*0.35;path=`M ${from.cx} ${fB} L ${from.cx} ${mY} L ${to.cx} ${mY} L ${to.cx} ${tT}`;lp={x:(from.cx+to.cx)/2,y:mY-6};}
+  return {path,labelPos:lp};
+}
+
+function DetailPanel({ node, onClose }) {
+  if (!node) return null;
+  const typeLabel = node.type === "decision" ? "Beslismoment" : node.type === "start" ? "Startpunt" : node.type === "end_green" ? "Eindpunt" : node.type === "end_red" ? "Stoppunt" : "Processtap";
+  const actorName = ACTORS[node.lane];
+  const accentColor = node.type === "decision" ? C.accent : node.type === "end_red" ? C.red : node.type === "end_green" ? C.green : C.primary;
+
+  return (
+    <div onClick={onClose} style={{
+      position:"fixed",inset:0,background:"rgba(0,0,0,0.45)",
+      zIndex:1000,display:"flex",alignItems:"center",justifyContent:"center",padding:"20px",
+    }}>
+      <div onClick={e=>e.stopPropagation()} style={{
+        background:"#fff",borderRadius:"16px",maxWidth:"560px",width:"100%",
+        maxHeight:"80vh",overflow:"hidden",display:"flex",flexDirection:"column",
+        boxShadow:"0 25px 60px rgba(0,0,0,0.3)",
+      }}>
+        <div style={{
+          background:accentColor,padding:"20px 24px",
+          display:"flex",justifyContent:"space-between",alignItems:"flex-start",
+        }}>
+          <div>
+            <div style={{fontSize:"9px",fontWeight:700,color:"rgba(255,255,255,0.7)",letterSpacing:"1.5px",textTransform:"uppercase",marginBottom:"6px"}}>{typeLabel} · {actorName}</div>
+            <div style={{fontSize:"18px",fontWeight:800,color:"#fff",lineHeight:1.3}}>{node.label.replace(/\n/g," ")}</div>
+          </div>
+          <button onClick={onClose} style={{
+            background:"rgba(255,255,255,0.2)",border:"none",borderRadius:"8px",
+            width:"32px",height:"32px",color:"#fff",fontSize:"18px",
+            cursor:"pointer",flexShrink:0,display:"flex",alignItems:"center",justifyContent:"center",
+          }}>✕</button>
+        </div>
+        <div style={{padding:"20px 24px",overflowY:"auto",flex:1}}>
+          <div style={{fontSize:"13px",color:"#374151",lineHeight:1.7,whiteSpace:"pre-line",fontFamily:"'Segoe UI', system-ui, sans-serif"}}>
+            {node.detail.split("\n").map((line, i) => {
+              const trimmed = line.trim();
+              if (!trimmed) return <div key={i} style={{height:"10px"}} />;
+              const isSectionHeader = /^\d+\.\s/.test(trimmed) && !trimmed.startsWith("•") && trimmed.length < 80;
+              const isSubTitle = trimmed.startsWith("Doel:") || trimmed.startsWith("CHECKLIST") || trimmed.startsWith("VASTLEGGEN") || trimmed.startsWith("Finale");
+              if (isSectionHeader) {
+                return <div key={i} style={{fontWeight:700,color:"#111827",fontSize:"13px",marginTop:i>0?"14px":"0",marginBottom:"4px",borderLeft:`3px solid ${accentColor}`,paddingLeft:"10px"}}>{trimmed}</div>;
+              }
+              if (isSubTitle) {
+                return <div key={i} style={{fontWeight:700,color:accentColor,fontSize:"13px",marginTop:"10px",marginBottom:"4px"}}>{trimmed}</div>;
+              }
+              if (trimmed.startsWith("•") || trimmed.startsWith("→")) {
+                return <div key={i} style={{paddingLeft:"16px",position:"relative",marginBottom:"3px"}}>
+                  <span style={{position:"absolute",left:"4px",color:accentColor,fontWeight:700}}>{trimmed.startsWith("→")?"→":"•"}</span>
+                  <span>{trimmed.substring(1).trim()}</span>
+                </div>;
+              }
+              return <div key={i} style={{marginBottom:"2px"}}>{trimmed}</div>;
+            })}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function FlowChart({ flow }) {
+  const [hovered, setHovered] = useState(null);
+  const [selectedNode, setSelectedNode] = useState(null);
+  const [tooltipPos, setTooltipPos] = useState({ x: 0, y: 0 });
+  const containerRef = useRef(null);
+
+  const maxRow = Math.max(...flow.nodes.map(n => n.row));
+  const totalH = HEADER_H + flow.phases.length * PHASE_H + (maxRow + 1) * ROW_H + 80;
+  const nodeMap = {};
+  flow.nodes.forEach(n => { nodeMap[n.id] = n; });
+
+  const handleMouseMove = useCallback((e) => {
+    if (containerRef.current) {
+      const rect = containerRef.current.getBoundingClientRect();
+      setTooltipPos({x:e.clientX-rect.left+containerRef.current.scrollLeft,y:e.clientY-rect.top+containerRef.current.scrollTop});
+    }
+  }, []);
+
+  return (
+    <>
+      <div ref={containerRef} onMouseMove={handleMouseMove} style={{
+        position:"relative",width:"100%",overflowX:"auto",
+        border:"1px solid #E5E7EB",borderRadius:"12px",background:"#fff",
+      }}>
+        <div style={{position:"relative",width:`${TOTAL_W}px`,height:`${totalH}px`}}>
+          <div style={{position:"sticky",top:0,zIndex:30,display:"flex",height:`${HEADER_H}px`,background:C.primary,borderRadius:"12px 12px 0 0"}}>
+            {ACTORS.map((a,i)=>(
+              <div key={a} style={{width:`${LANE_W}px`,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",borderRight:i<3?"1px solid rgba(255,255,255,0.2)":"none"}}>
+                <span style={{color:"#fff",fontSize:"13px",fontWeight:800,letterSpacing:"0.8px",textTransform:"uppercase"}}>{a}</span>
+                <span style={{color:"rgba(255,255,255,0.55)",fontSize:"9px",fontWeight:500,marginTop:"1px"}}>{ACTOR_SUBS[i]}</span>
+              </div>
+            ))}
+          </div>
+          {[1,2,3].map(i=>(<div key={i} style={{position:"absolute",left:`${i*LANE_W}px`,top:`${HEADER_H}px`,bottom:0,width:"1px",background:C.laneLine,zIndex:1}}/>))}
+          {ACTORS.map((_,i)=>(<div key={i} style={{position:"absolute",left:`${i*LANE_W}px`,top:`${HEADER_H}px`,width:`${LANE_W}px`,bottom:0,background:i%2===0?"#FAFBFF":"#FFFFFF",zIndex:0}}/>))}
+          {flow.phases.map((p,pi)=>{
+            const yPos=HEADER_H+pi*PHASE_H+(p.afterRow+1)*ROW_H;
+            return(<div key={pi} style={{position:"absolute",left:0,top:`${yPos}px`,width:"100%",height:`${PHASE_H}px`,background:`${C.primary}0D`,borderTop:`2px solid ${C.primary}30`,borderBottom:`1px solid ${C.primary}15`,display:"flex",alignItems:"center",paddingLeft:"16px",zIndex:5}}>
+              <span style={{fontSize:"10px",fontWeight:800,color:C.primary,letterSpacing:"1.2px"}}>{p.label}</span>
+            </div>);
+          })}
+          <svg style={{position:"absolute",left:0,top:0,width:"100%",height:"100%",zIndex:8,pointerEvents:"none"}}>
+            <defs>
+              <marker id="ah" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#9CA3AF"/></marker>
+              <marker id="ahR" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill={C.red}/></marker>
+            </defs>
+            {flow.edges.map((e,i)=>{
+              const fn=nodeMap[e.from],tn=nodeMap[e.to];
+              if(!fn||!tn)return null;
+              const{path,labelPos}=buildPath(fn,tn,flow.phases,e.label);
+              const rej=tn.type==="end_red";
+              return(<g key={i}>
+                <path d={path} fill="none" stroke={rej?C.red:"#9CA3AF"} strokeWidth={rej?2:1.5} strokeDasharray={rej?"6,3":"none"} markerEnd={rej?"url(#ahR)":"url(#ah)"}/>
+                {e.label&&labelPos&&(<>
+                  <circle cx={labelPos.x} cy={labelPos.y+4} r="11" fill={rej?C.red:C.green}/>
+                  <text x={labelPos.x} y={labelPos.y+8} textAnchor="middle" fontSize="8" fontWeight="800" fill="#fff">{e.label}</text>
+                </>)}
+              </g>);
+            })}
+          </svg>
+          {flow.nodes.map((node)=>{
+            const pos=getNodePos(node,flow.phases);
+            const isHov=hovered===node.id;
+            const hasDetail=!!node.detail;
+            if(node.type==="decision"){
+              return(
+                <div key={node.id} onMouseEnter={()=>setHovered(node.id)} onMouseLeave={()=>setHovered(null)} onClick={()=>hasDetail&&setSelectedNode(node)}
+                  style={{position:"absolute",left:`${pos.cx-DIAMOND_SIZE/2}px`,top:`${pos.cy-DIAMOND_SIZE/2}px`,width:`${DIAMOND_SIZE}px`,height:`${DIAMOND_SIZE}px`,transform:"rotate(45deg)",background:C.accent,border:`2px solid ${C.accent}`,borderRadius:"4px",zIndex:10,cursor:hasDetail?"pointer":"default",boxShadow:isHov?`0 4px 16px ${C.accent}50`:"0 1px 4px rgba(0,0,0,0.1)",transition:"box-shadow 0.2s"}}>
+                  <div style={{transform:"rotate(-45deg)",width:"100%",height:"100%",display:"flex",alignItems:"center",justifyContent:"center",textAlign:"center",padding:"4px"}}>
+                    <span style={{fontSize:"8.5px",fontWeight:700,color:"#fff",lineHeight:1.2}}>{node.label.replace(/\n/g," ")}</span>
+                  </div>
+                  {hasDetail&&<div style={{position:"absolute",bottom:"-2px",right:"-2px",transform:"rotate(-45deg)",background:"rgba(255,255,255,0.3)",borderRadius:"50%",width:"14px",height:"14px",display:"flex",alignItems:"center",justifyContent:"center",fontSize:"8px",color:"#fff",fontWeight:700}}>i</div>}
+                </div>
+              );
+            }
+            let bg=C.nodeFill,bc=C.nodeStroke,tc=C.text,r="6px";
+            if(node.type==="start"){bg=C.primaryLight;bc=C.primary;r="20px";}
+            if(node.type==="end_green"){bg=C.greenLight;bc=C.green;tc="#14532D";r="20px";}
+            if(node.type==="end_red"){bg=C.redLight;bc=C.red;tc="#7F1D1D";r="20px";}
+            return(
+              <div key={node.id} onMouseEnter={()=>setHovered(node.id)} onMouseLeave={()=>setHovered(null)} onClick={()=>hasDetail&&setSelectedNode(node)}
+                style={{position:"absolute",left:`${pos.cx-NODE_W/2}px`,top:`${pos.cy-NODE_H/2}px`,width:`${NODE_W}px`,height:`${NODE_H}px`,background:bg,border:`1.5px solid ${bc}`,borderRadius:r,display:"flex",alignItems:"center",justifyContent:"center",textAlign:"center",zIndex:10,cursor:hasDetail?"pointer":"default",boxShadow:isHov?`0 4px 16px ${bc}30`:"0 1px 3px rgba(0,0,0,0.06)",transition:"box-shadow 0.2s",padding:"4px 10px"}}>
+                <span style={{fontSize:"11px",fontWeight:600,color:tc,lineHeight:1.3,whiteSpace:"pre-line"}}>{node.label}</span>
+                {hasDetail&&<span style={{position:"absolute",bottom:"3px",right:"7px",fontSize:"13px",color:bc,opacity:0.5,fontWeight:700}}>ⓘ</span>}
+              </div>
+            );
+          })}
+          {hovered&&nodeMap[hovered]?.detail&&!selectedNode&&(
+            <div style={{position:"absolute",left:tooltipPos.x+14,top:tooltipPos.y-8,background:"#1e293b",color:"#fff",padding:"8px 12px",borderRadius:"8px",fontSize:"11px",lineHeight:1.4,maxWidth:"260px",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis",zIndex:100,pointerEvents:"none",boxShadow:"0 8px 24px rgba(0,0,0,0.3)"}}>
+              <span style={{opacity:0.6,fontSize:"9px"}}>Klik voor details</span>
+            </div>
+          )}
+        </div>
+      </div>
+      {selectedNode && <DetailPanel node={selectedNode} onClose={()=>setSelectedNode(null)} />}
+    </>
+  );
+}
+
+function App() {
+  const [activeTab, setActiveTab] = useState("zzp");
+  return (
+    <div style={{fontFamily:"'Segoe UI', -apple-system, system-ui, sans-serif",background:"#F3F4F6",minHeight:"100vh",padding:"28px 24px"}}>
+      <div style={{textAlign:"center",marginBottom:"8px"}}>
+        <h1 style={{margin:0,fontSize:"28px",fontWeight:900,color:"#111827",letterSpacing:"-0.5px",textTransform:"uppercase"}}>
+          {activeTab==="zzp"?"Freelance (ZZP) Procesflow":"Detachering Procesflow"}
+        </h1>
+        <p style={{margin:"6px 0 0",fontSize:"12px",color:"#6B7280",letterSpacing:"0.3px"}}>
+          HintTech · Compliance WDBA · VBAR · SNA (NEN4400-1) · WTTA
+        </p>
+      </div>
+      <div style={{width:"100%",height:"1px",background:"#D1D5DB",margin:"16px 0 20px"}}/>
+      <div style={{display:"flex",gap:"6px",justifyContent:"center",marginBottom:"24px"}}>
+        {[{id:"zzp",label:"Freelance (ZZP)"},{id:"detachering",label:"Detachering"}].map(tab=>(
+          <button key={tab.id} onClick={()=>setActiveTab(tab.id)} style={{
+            background:activeTab===tab.id?C.primary:"#fff",color:activeTab===tab.id?"#fff":"#4B5563",
+            border:`1.5px solid ${activeTab===tab.id?C.primary:"#D1D5DB"}`,borderRadius:"8px",padding:"10px 28px",fontSize:"13px",fontWeight:700,cursor:"pointer",
+          }}>{tab.label}</button>
+        ))}
+      </div>
+      <div style={{display:"flex",justifyContent:"center",gap:"20px",marginBottom:"16px",flexWrap:"wrap"}}>
+        {[
+          {color:C.primaryLight,border:C.primary,text:"Start",r:"10px"},
+          {color:C.nodeFill,border:C.nodeStroke,text:"Processtap",r:"3px"},
+          {color:C.accent,border:C.accent,text:"Beslismoment",diamond:true},
+          {color:C.greenLight,border:C.green,text:"Afgerond",r:"10px"},
+          {color:C.redLight,border:C.red,text:"Stop",r:"10px"},
+        ].map((it,i)=>(
+          <div key={i} style={{display:"flex",alignItems:"center",gap:"6px"}}>
+            <div style={{width:it.diamond?"14px":"22px",height:"14px",background:it.color,border:`1.5px solid ${it.border}`,borderRadius:it.diamond?"2px":(it.r||"3px"),transform:it.diamond?"rotate(45deg)":"none"}}/>
+            <span style={{fontSize:"11px",color:"#6B7280",fontWeight:600}}>{it.text}</span>
+          </div>
+        ))}
+      </div>
+      <p style={{textAlign:"center",fontSize:"11px",color:"#9CA3AF",marginBottom:"16px"}}>
+        Klik op een stap voor volledige beschrijving · Scroll horizontaal indien nodig
+      </p>
+      {activeTab==="zzp"&&<FlowChart flow={zzpFlow}/>}
+      {activeTab==="detachering"&&<FlowChart flow={detacheringFlow}/>}
+      <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginTop:"20px",padding:"12px 0",borderTop:"1px solid #E5E7EB"}}>
+        <div style={{background:C.primary,color:"#fff",fontWeight:900,fontSize:"12px",padding:"4px 10px",borderRadius:"6px"}}>HintTech</div>
+        <span style={{fontSize:"10px",color:"#9CA3AF"}}>WDBA · VBAR · SNA · WTTA · NEN4400-1</span>
+      </div>
+    </div>
+  );
+}
+
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+  </script>
+</body>
+</html>
